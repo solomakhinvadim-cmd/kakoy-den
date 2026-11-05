@@ -38,10 +38,15 @@ jobs:
         run: ./gradlew assembleRelease --no-daemon
       - name: Collect
         run: cp android/app/build/outputs/apk/release/app-release.apk kakoy-den.apk
-      - uses: actions/upload-artifact@v4
-        with:
-          name: android
-          path: kakoy-den.apk
+      - name: Publish kakoy-den.apk
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="build-${{ github.run_number }}"
+          gh release create "$TAG" --repo "${{ github.repository }}" \
+            --title "Какой день — сборка ${{ github.run_number }}" \
+            --notes "Android: откройте эту страницу на телефоне, скачайте kakoy-den.apk и нажмите на него. iPhone: установите kakoy-den.ipa с компьютера через Sideloadly." 2>/dev/null || true
+          gh release upload "$TAG" kakoy-den.apk --clobber --repo "${{ github.repository }}"
 
   ios:
     runs-on: macos-latest
@@ -68,24 +73,12 @@ jobs:
           mkdir -p Payload
           cp -R build/Build/Products/Release-iphoneos/*.app Payload/
           zip -qr kakoy-den.ipa Payload
-      - uses: actions/upload-artifact@v4
-        with:
-          name: ios
-          path: kakoy-den.ipa
-
-  release:
-    needs: [android, ios]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          merge-multiple: true
-      - name: Publish release
+      - name: Publish kakoy-den.ipa
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           TAG="build-${{ github.run_number }}"
-          gh release create "$TAG" kakoy-den.apk kakoy-den.ipa \
-            --repo "${{ github.repository }}" \
+          gh release create "$TAG" --repo "${{ github.repository }}" \
             --title "Какой день — сборка ${{ github.run_number }}" \
-            --notes "Android: скачайте kakoy-den.apk на телефон и откройте. iOS: установите kakoy-den.ipa через Sideloadly или AltStore."
+            --notes "Android: откройте эту страницу на телефоне, скачайте kakoy-den.apk и нажмите на него. iPhone: установите kakoy-den.ipa с компьютера через Sideloadly." 2>/dev/null || true
+          gh release upload "$TAG" kakoy-den.ipa --clobber --repo "${{ github.repository }}"
