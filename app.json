@@ -2,7 +2,7 @@
   "expo": {
     "name": "KakoyDen",
     "slug": "kakoy-den",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -17,7 +17,7 @@
       "infoPlist": {
         "CFBundleDisplayName": "Какой день"
       },
-      "buildNumber": "2"
+      "buildNumber": "3"
     },
     "android": {
       "package": "com.example.kakoyden",
@@ -31,7 +31,7 @@
         "android.permission.RECEIVE_BOOT_COMPLETED",
         "android.permission.VIBRATE"
       ],
-      "versionCode": 2
+      "versionCode": 3
     },
     "plugins": [
       [

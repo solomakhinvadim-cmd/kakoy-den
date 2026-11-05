@@ -1,5 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
-import React, { useCallback, useEffect, useState } from 'react';
+import * as Notifications from 'expo-notifications';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, AppState, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { Character } from './src/components/Characters';
@@ -57,6 +58,17 @@ function Main() {
   const [ready, setReady] = useState(false);
   const [allowed, setAllowed] = useState(true);
   const [picker, setPicker] = useState<PickerState>(null);
+  const scrollRef = useRef<ScrollView>(null);
+
+  // Нажали на уведомление — показываем верх экрана: персонажа, день и число
+  useEffect(() => {
+    const toTop = () => {
+      setPicker(null);
+      scrollRef.current?.scrollTo({ y: 0, animated: false });
+    };
+    const sub = Notifications.addNotificationResponseReceivedListener(toTop);
+    return () => sub.remove();
+  }, []);
 
   // Загрузка настроек и разрешение на уведомления
   useEffect(() => {
@@ -128,7 +140,7 @@ function Main() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: bg }} edges={['top', 'left', 'right']}>
       <StatusBar style="dark" />
-      <ScrollView contentContainerStyle={styles.scroll}>
+      <ScrollView ref={scrollRef} contentContainerStyle={styles.scroll}>
         {/* Персонаж и день */}
         <View style={styles.hero} accessible accessibilityLabel={`Сегодня ${DAY_NAMES[jsDay]}, ${formatDate(now)}`}>
           <Character theme={settings.theme} size={150} jsDay={jsDay} part={part} />
@@ -149,15 +161,28 @@ function Main() {
             const isToday = d === jsDay;
             if (settings.theme === 'frog') {
               return (
-                <View key={d} style={styles.frogDay}>
+                <View
+                  key={d}
+                  style={styles.frogDay}
+                  accessibilityLabel={isToday ? `${DAY_SHORT[d]}, сегодня` : DAY_SHORT[d]}
+                  accessibilityState={{ selected: isToday }}
+                >
                   <View
                     style={[
                       styles.frogDot,
                       { backgroundColor: DAY_COLORS[d] },
-                      isToday && { borderWidth: 3, borderColor: '#FFFFFF' },
+                      isToday ? styles.frogDotToday : { opacity: 0.55 },
                     ]}
-                  />
-                  <Text style={{ color: isToday ? '#FFFFFF' : '#CFC6EA', fontWeight: isToday ? '800' : '600', fontSize: 12 }}>
+                  >
+                    {isToday && <View style={styles.frogInner} />}
+                  </View>
+                  <Text
+                    style={{
+                      color: isToday ? '#FFFFFF' : '#A69CC8',
+                      fontWeight: isToday ? '900' : '600',
+                      fontSize: isToday ? 15 : 12,
+                    }}
+                  >
                     {DAY_SHORT[d]}
                   </Text>
                 </View>
@@ -166,15 +191,25 @@ function Main() {
             return (
               <View
                 key={d}
+                accessibilityLabel={isToday ? `${DAY_SHORT[d]}, сегодня` : DAY_SHORT[d]}
+                accessibilityState={{ selected: isToday }}
                 style={[
                   styles.dayChip,
                   { backgroundColor: isToday ? theme.today(d) : theme.chip, borderRadius: theme.radius - 6 },
+                  isToday ? styles.dayChipToday : { opacity: 0.6 },
                   settings.theme === 'calendar' && !isToday && { borderWidth: 2, borderColor: '#E3E8F4' },
                 ]}
               >
-                <Text style={{ color: isToday ? theme.todayInk : theme.chipInk, fontWeight: isToday ? '900' : '700', fontSize: 14 }}>
+                <Text
+                  style={{
+                    color: isToday ? theme.todayInk : theme.chipInk,
+                    fontWeight: isToday ? '900' : '700',
+                    fontSize: isToday ? 18 : 14,
+                  }}
+                >
                   {DAY_SHORT[d]}
                 </Text>
+                {isToday && <View style={[styles.todayDot, { backgroundColor: theme.todayInk }]} />}
               </View>
             );
           })}
@@ -329,10 +364,22 @@ const styles = StyleSheet.create({
   today: { fontSize: 17, fontWeight: '700', marginTop: 8 },
   dayName: { fontSize: 54, fontWeight: '900', lineHeight: 62, maxWidth: '100%' },
   date: { fontSize: 17, fontWeight: '700' },
-  week: { flexDirection: 'row', gap: 6 },
+  week: { flexDirection: 'row', gap: 6, alignItems: 'center' },
   dayChip: { flex: 1, height: 42, alignItems: 'center', justifyContent: 'center' },
-  frogDay: { flex: 1, alignItems: 'center', gap: 6 },
-  frogDot: { width: 26, height: 26, borderRadius: 13 },
+  dayChipToday: {
+    flex: 1.35,
+    height: 60,
+    shadowColor: '#000',
+    shadowOpacity: 0.18,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 4,
+  },
+  todayDot: { width: 7, height: 7, borderRadius: 4, marginTop: 4 },
+  frogDay: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 6 },
+  frogDot: { width: 24, height: 24, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  frogDotToday: { width: 38, height: 38, borderRadius: 19, borderWidth: 4, borderColor: '#FFFFFF' },
+  frogInner: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#1B1530' },
   warn: { padding: 14, marginTop: 16 },
   section: { fontSize: 15, fontWeight: '800', marginTop: 22, marginBottom: 10 },
   row: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, paddingHorizontal: 14, gap: 10 },

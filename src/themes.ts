@@ -24,6 +24,8 @@ export type Theme = {
   /** Файл звука уведомления (assets/sounds) и его название в настройках */
   sound: string;
   soundName: string;
+  /** Цвет значка уведомления на Android */
+  notifColor: string;
 };
 
 // Цвет каждого дня для темы «Квак» (индекс JS: 0 — воскресенье)
@@ -53,13 +55,14 @@ export const THEMES: Record<ThemeId, Theme> = {
     knobOff: '#FFFFFF',
     chip: '#F6E7D4',
     chipInk: '#6B4B33',
-    today: () => '#F28C38',
-    todayInk: '#3B2A1E',
+    today: () => '#3B2A1E',
+    todayInk: '#FFF8EE',
     button: '#3B2A1E',
     buttonInk: '#FFF8EE',
     radius: 18,
     sound: 'meow.wav',
     soundName: 'Мяу',
+    notifColor: '#F28C38',
   },
   calendar: {
     id: 'calendar',
@@ -83,6 +86,7 @@ export const THEMES: Record<ThemeId, Theme> = {
     radius: 18,
     sound: 'rustle.wav',
     soundName: 'Шелест страницы',
+    notifColor: '#D13438',
   },
   sun: {
     id: 'sun',
@@ -106,6 +110,7 @@ export const THEMES: Record<ThemeId, Theme> = {
     radius: 22,
     sound: 'birds.wav',
     soundName: 'Птички',
+    notifColor: '#17675E',
   },
   frog: {
     id: 'frog',
@@ -129,6 +134,7 @@ export const THEMES: Record<ThemeId, Theme> = {
     radius: 18,
     sound: 'croak.wav',
     soundName: 'Ква-ква',
+    notifColor: '#5BBF6A',
   },
 };
 

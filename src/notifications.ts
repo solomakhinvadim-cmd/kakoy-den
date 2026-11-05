@@ -1,3 +1,5 @@
+import { Asset } from 'expo-asset';
+import * as FileSystem from 'expo-file-system/legacy';
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 import { DAY_NAMES, formatDate } from './dates';
@@ -55,12 +57,46 @@ export async function requestPermission(): Promise<boolean> {
   return p.granted;
 }
 
-/** «Сегодня среда» / «5 ноября» */
-function contentFor(settings: Settings, date: Date): Notifications.NotificationContentInput {
+// Картинка персонажа в уведомлении (iOS показывает её справа)
+const IMAGES: Record<ThemeId, number> = {
+  cat: require('../assets/notif/cat.png'),
+  calendar: require('../assets/notif/calendar.png'),
+  sun: require('../assets/notif/sun.png'),
+  frog: require('../assets/notif/frog.png'),
+};
+const IMG_DIR = `${FileSystem.cacheDirectory}notif-images/`;
+let imgCounter = 0;
+
+async function resetImageDir(): Promise<void> {
+  if (Platform.OS !== 'ios') return;
+  await FileSystem.deleteAsync(IMG_DIR, { idempotent: true }).catch(() => {});
+  await FileSystem.makeDirectoryAsync(IMG_DIR, { intermediates: true }).catch(() => {});
+}
+
+/** iOS забирает файл картинки себе, поэтому каждому уведомлению — своя копия */
+async function attachmentFor(theme: ThemeId): Promise<Notifications.NotificationContentAttachmentIos[] | undefined> {
+  if (Platform.OS !== 'ios') return undefined;
+  try {
+    const asset = Asset.fromModule(IMAGES[theme]);
+    await asset.downloadAsync();
+    if (!asset.localUri) return undefined;
+    const to = `${IMG_DIR}${theme}-${Date.now()}-${imgCounter++}.png`;
+    await FileSystem.copyAsync({ from: asset.localUri, to });
+    return [{ identifier: theme, url: to, typeHint: 'public.png' }];
+  } catch {
+    return undefined; // без картинки уведомление всё равно придёт
+  }
+}
+
+/** «Сегодня среда» / «5 ноября» + картинка (iOS) и цвет (Android) персонажа */
+async function contentFor(settings: Settings, date: Date): Promise<Notifications.NotificationContentInput> {
+  const theme = THEMES[settings.theme];
   return {
     title: `Сегодня ${DAY_NAMES[date.getDay()]}`,
     body: formatDate(date),
-    sound: settings.sound ? THEMES[settings.theme].sound : false,
+    sound: settings.sound ? theme.sound : false,
+    color: theme.notifColor,
+    attachments: await attachmentFor(settings.theme),
   };
 }
 
@@ -88,6 +124,7 @@ export function rescheduleAll(settings: Settings): Promise<void> {
 async function doReschedule(settings: Settings): Promise<void> {
   await Notifications.cancelAllScheduledNotificationsAsync();
   if (!(await hasPermission())) return;
+  await resetImageDir();
 
   const enabled = settings.times.filter((t) => t.enabled);
   const days = horizonDays(enabled.length);
@@ -98,7 +135,7 @@ async function doReschedule(settings: Settings): Promise<void> {
       const date = new Date(now.getFullYear(), now.getMonth(), now.getDate() + d, t.hour, t.minute, 0, 0);
       if (date.getTime() <= now.getTime()) continue;
       await Notifications.scheduleNotificationAsync({
-        content: contentFor(settings, date),
+        content: await contentFor(settings, date),
         trigger: {
           type: Notifications.SchedulableTriggerInputTypes.DATE,
           date,
@@ -111,8 +148,9 @@ async function doReschedule(settings: Settings): Promise<void> {
 
 /** Пробное уведомление через 3 секунды */
 export async function sendTest(settings: Settings): Promise<void> {
+  await FileSystem.makeDirectoryAsync(IMG_DIR, { intermediates: true }).catch(() => {});
   await Notifications.scheduleNotificationAsync({
-    content: contentFor(settings, new Date()),
+    content: await contentFor(settings, new Date()),
     trigger: {
       type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
       seconds: 3,
