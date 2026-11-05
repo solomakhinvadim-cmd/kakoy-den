@@ -1,5 +1,3 @@
-import { PartOfDay } from './dates';
-
 export type ThemeId = 'cat' | 'calendar' | 'sun' | 'frog';
 
 export type Theme = {
@@ -23,8 +21,9 @@ export type Theme = {
   button: string;
   buttonInk: string;
   radius: number;
-  /** Текст под заголовком «Сегодня среда» в уведомлении */
-  body: (part: PartOfDay) => string;
+  /** Файл звука уведомления (assets/sounds) и его название в настройках */
+  sound: string;
+  soundName: string;
 };
 
 // Цвет каждого дня для темы «Квак» (индекс JS: 0 — воскресенье)
@@ -59,13 +58,8 @@ export const THEMES: Record<ThemeId, Theme> = {
     button: '#3B2A1E',
     buttonInk: '#FFF8EE',
     radius: 18,
-    body: (p) =>
-      ({
-        morning: 'Мяу! Доброе утро и хорошего дня',
-        day: 'Мур, не забудь пообедать',
-        evening: 'Мур-мур, хорошего вечера',
-        night: 'Мяу… пора спать',
-      })[p],
+    sound: 'meow.wav',
+    soundName: 'Мяу',
   },
   calendar: {
     id: 'calendar',
@@ -87,13 +81,8 @@ export const THEMES: Record<ThemeId, Theme> = {
     button: '#D13438',
     buttonInk: '#FFFFFF',
     radius: 18,
-    body: (p) =>
-      ({
-        morning: 'Новый листок — новый день',
-        day: 'Середина дня — время обеда!',
-        evening: 'Листок почти дочитан. Хорошего вечера',
-        night: 'Завтра будет новый листок',
-      })[p],
+    sound: 'rustle.wav',
+    soundName: 'Шелест страницы',
   },
   sun: {
     id: 'sun',
@@ -115,13 +104,8 @@ export const THEMES: Record<ThemeId, Theme> = {
     button: '#17675E',
     buttonInk: '#FFFFFF',
     radius: 22,
-    body: (p) =>
-      ({
-        morning: 'Доброе утро! Солнышко уже встало',
-        day: 'Солнце в зените — пора на обед',
-        evening: 'Солнышко садится. Хорошего вечера',
-        night: 'Спокойной ночи!',
-      })[p],
+    sound: 'birds.wav',
+    soundName: 'Птички',
   },
   frog: {
     id: 'frog',
@@ -143,13 +127,8 @@ export const THEMES: Record<ThemeId, Theme> = {
     button: '#1B1530',
     buttonInk: '#FFFFFF',
     radius: 18,
-    body: (p) =>
-      ({
-        morning: 'Ква! Доброе утро',
-        day: 'Ква-ква, обеденный перерыв',
-        evening: 'Ква… хорошего вечера',
-        night: 'Ква-а… спокойной ночи',
-      })[p],
+    sound: 'croak.wav',
+    soundName: 'Ква-ква',
   },
 };
 

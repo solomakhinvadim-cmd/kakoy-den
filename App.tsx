@@ -10,11 +10,11 @@ import {
   DAY_SHORT,
   PART_LABEL,
   WEEK_ORDER,
-  capitalize,
   formatDate,
   formatTime,
   partOfDay,
 } from './src/dates';
+import { registerBackground } from './src/background';
 import { requestPermission, rescheduleAll, sendTest, setupChannels } from './src/notifications';
 import {
   DEFAULT_SETTINGS,
@@ -67,8 +67,16 @@ function Main() {
       const ok = await requestPermission();
       setAllowed(ok);
       setReady(true);
+      registerBackground();
     })();
   }, []);
+
+  // При каждом возвращении в приложение продлеваем расписание (в уведомлениях есть дата)
+  useEffect(() => {
+    if (!ready) return;
+    const sub = AppState.addEventListener('change', (st) => st === 'active' && rescheduleAll(settings));
+    return () => sub.remove();
+  }, [ready, settings]);
 
   // Каждое изменение — сохранить и перепланировать
   useEffect(() => {
@@ -249,7 +257,7 @@ function Main() {
           <View style={{ flex: 1 }}>
             <Text style={{ color: theme.ink, fontWeight: '800', fontSize: 16 }}>Звук</Text>
             <Text style={{ color: theme.muted, fontSize: 14, marginTop: 2 }}>
-              {settings.sound ? 'Уведомление со звуком' : 'Тихое уведомление'}
+              {settings.sound ? `Звук «${theme.soundName}» — меняется вместе с персонажем` : 'Тихое уведомление'}
             </Text>
           </View>
           <Toggle value={settings.sound} onChange={(v) => update({ sound: v })} theme={theme} label="Звук уведомлений" />
@@ -299,7 +307,7 @@ function Main() {
           </Text>
         </Pressable>
         <Text style={{ color: theme.muted, fontSize: 13, textAlign: 'center' }}>
-          {capitalize(DAY_NAMES[jsDay])} · придёт через 3 секунды
+          «Сегодня {DAY_NAMES[jsDay]}» · {formatDate(now)} · через 3 секунды
         </Text>
       </ScrollView>
 
