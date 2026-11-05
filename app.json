@@ -1,0 +1,45 @@
+{
+  "expo": {
+    "name": "KakoyDen",
+    "slug": "kakoy-den",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FFF8EE"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.example.kakoyden",
+      "infoPlist": {
+        "CFBundleDisplayName": "Какой день"
+      }
+    },
+    "android": {
+      "package": "com.example.kakoyden",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#F28C38"
+      },
+      "permissions": [
+        "android.permission.POST_NOTIFICATIONS",
+        "android.permission.SCHEDULE_EXACT_ALARM",
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.VIBRATE"
+      ]
+    },
+    "plugins": [
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#F28C38"
+        }
+      ],
+      "@react-native-community/datetimepicker"
+    ]
+  }
+}
