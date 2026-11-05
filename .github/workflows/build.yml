@@ -49,7 +49,7 @@ jobs:
           gh release upload "$TAG" kakoy-den.apk --clobber --repo "${{ github.repository }}"
 
   ios:
-    runs-on: macos-latest
+    runs-on: macos-15-intel
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
